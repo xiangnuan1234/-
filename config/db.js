@@ -1,7 +1,10 @@
 const mysql = require('mysql2');
 const config = require('./default');
 
-const pool = mysql.createPool(config.db);
+// 优先使用 Railway 提供的 MYSQL_URL 环境变量
+const pool = mysql.createPool(
+  process.env.MYSQL_URL || config.db
+);
 
 const db = {
   query: (sql, values) => {

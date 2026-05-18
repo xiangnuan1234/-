@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const config = require('./config/default');
-const db = require('./config/db');
+const db = require('./config/db');  // 引入 db 确保连接池初始化
 
 const app = express();
 
@@ -25,7 +24,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ code: 500, message: err.message });
 });
 
-const PORT = config.port;
+// 关键修改：使用 Railway 注入的 PORT，本地开发时回退到 3000
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
 });
