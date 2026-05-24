@@ -13,25 +13,7 @@ const asyncQuery = (sql, params) => new Promise((resolve, reject) => {
 
 const { auth, roleAuth } = require('../middleware/auth');
 
-router.get('/', auth, async (req, res) => {
-  try {
-    const list = await asyncQuery('SELECT * FROM notification WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
-    res.json({ code: 200, data: { list, unreadCount: list.filter(n => !n.is_read).length } });
-  } catch (err) {
-    res.status(500).json({ code: 500, message: err.message });
-  }
-});
-
-router.post('/', auth, roleAuth('teacher', 'admin'), async (req, res) => {
-  try {
-    const { user_id, title, content } = req.body;
-    await asyncQuery('INSERT INTO notification (user_id, title, content) VALUES (?, ?, ?)', [user_id, title, content || null]);
-    res.json({ code: 200, message: '发送成功' });
-  } catch (err) {
-    res.status(500).json({ code: 500, message: err.message });
-  }
-});
-
+// 广播通知路由 - 必须在单个通知路由之前定义
 router.post('/broadcast', auth, roleAuth('admin'), async (req, res) => {
   try {
     const { title, content, role } = req.body;
@@ -42,6 +24,27 @@ router.post('/broadcast', auth, roleAuth('admin'), async (req, res) => {
       sent++;
     }
     res.json({ code: 200, message: `成功发送给${sent}个用户` });
+  } catch (err) {
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+// 获取通知列表
+router.get('/', auth, async (req, res) => {
+  try {
+    const list = await asyncQuery('SELECT * FROM notification WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+    res.json({ code: 200, data: { list, unreadCount: list.filter(n => !n.is_read).length } });
+  } catch (err) {
+    res.status(500).json({ code: 500, message: err.message });
+  }
+});
+
+// 发送单个通知
+router.post('/', auth, roleAuth('teacher', 'admin'), async (req, res) => {
+  try {
+    const { user_id, title, content } = req.body;
+    await asyncQuery('INSERT INTO notification (user_id, title, content) VALUES (?, ?, ?)', [user_id, title, content || null]);
+    res.json({ code: 200, message: '发送成功' });
   } catch (err) {
     res.status(500).json({ code: 500, message: err.message });
   }
